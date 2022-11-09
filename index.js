@@ -128,7 +128,7 @@ console.log(service)
 
 
 
-app.post("/service/:id/reviews", async (req, res) => {
+app.post("/reviews", async (req, res) => {
   try {
     
     const result = await Review.insertOne(req.body);
@@ -154,17 +154,17 @@ app.post("/service/:id/reviews", async (req, res) => {
 });
 
 
-app.get("/service/:id/reviews", async (req, res) => {
+app.get("/reviews", async (req, res) => {
   try {
     const query={}
    
-    const cursor = Service.find(query);
-    const Services = await cursor.toArray();
+    const cursor =  Review.find(query);
+    const  Reviews = await cursor.toArray();
 // console.log(Services[1])
     res.send({
       success: true,
       message: "Successfully got the data",
-      data: Services,
+      data:  Reviews,
     });
   } catch (error) {
     console.log(error.name, error.message);
