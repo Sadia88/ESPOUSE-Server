@@ -112,7 +112,7 @@ app.get("/service/:id", async (req, res) => {
     const { id } = req.params;
 
     const service = await  Service.findOne({ _id: ObjectId(id) });
-console.log(service)
+// console.log(service._id.toString())
     res.send({
       success: true,
       data:  service,
@@ -160,7 +160,7 @@ app.get("/reviews", async (req, res) => {
    
     const cursor =  Review.find(query);
     const  Reviews = await cursor.toArray();
-// console.log(Services[1])
+console.log(Review)
     res.send({
       success: true,
       message: "Successfully got the data",
@@ -174,6 +174,41 @@ app.get("/reviews", async (req, res) => {
     });
   }
 });
+
+
+  app.get("/all-review/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+     
+      const cursor = Review.find({ serviceId: id });
+      const  reviews = await cursor.toArray();
+
+      console.log(reviews)
+      res.send({
+        success: true,
+        data:  reviews,
+      });
+    } catch (error) {
+      res.send({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
+
+
+
+  
+ 
+
+  
+
+
+
+
+  
+  
+  
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
