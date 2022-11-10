@@ -259,7 +259,7 @@ app.get("/reviews", async (req, res) => {
 
 
 
-  app.patch('/reviews/:id',async(req,res)=>{
+  app.patch('/myReviews/:id',async(req,res)=>{
 
     const  id=req.params.id
     const status=req.body.status
@@ -267,23 +267,67 @@ app.get("/reviews", async (req, res) => {
     
     
     
-    const updateDoc = {
-      $set: {
-        status:status
+   
+    const reviews=Review.updateOne(query)
+    res.send(reviews)
+    })
+    
+    
+    app.delete("/myReviews/:id", async (req, res) => {
+      const { id } = req.params;
+    
+      try {
+        const review = await Review.findOne({ _id: ObjectId(id) });
+    
+        if (!review?._id) {
+          res.send({
+            success: false,
+            error: "Product doesn't exist",
+          });
+          return;
+        }
+    
+        const result = await Product.deleteOne({ _id: ObjectId(id) });
+    
+        if (result.deletedCount) {
+          res.send({
+            success: true,
+            message: `Successfully deleted the ${review.name}`,
+          });
+        } else {
+        }
+      } catch (error) {
+        res.send({
+          success: false,
+          error: error.message,
+        });
       }
-    };
-    const result=await orderCollection.updateOne(query,updateDoc)
-    res.send(result)
-    })
+    });
+
+    app.patch("/myReviews/:id", async (req, res) => {
+      const { id } = req.params;
     
+      try {
+        const result = await Review.updateOne({ _id: ObjectId(id) }, { $set: req.body });
     
-    app.delete('/reviews/:id',async(req,res)=>{
-      const id=req.params.id
-      const query={_id:ObjectId(id)}
-      const result=await orderCollection.deleteOne(query)
-      res.send(result)
-    
-    })
+        if (result.matchedCount) {
+          res.send({
+            success: true,
+            message: `successfully updated ${req.body.name}`,
+          });
+        } else {
+          res.send({
+            success: false,
+            error: "Couldn't update  the Review",
+          });
+        }
+      } catch (error) {
+        res.send({
+          success: false,
+          error: error.message,
+        });
+      }
+    });
   
   
   
