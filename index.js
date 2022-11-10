@@ -22,22 +22,22 @@ app.use(express.json())
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.qa3gncm.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-// function verifyJWT(req, res, next){
-//   const authHeader = req.headers.authorization;
+function verifyJWT(req, res, next){
+  const authHeader = req.headers.authorization;
 
-//   if(!authHeader){
-//       return res.status(401).send({message: 'unauthorized access'});
-//   }
-//   const token = authHeader.split(' ')[1];
+  if(!authHeader){
+      return res.status(401).send({message: 'unauthorized access'});
+  }
+  const token = authHeader.split(' ')[1];
 
-//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
-//       if(err){
-//           return res.status(403).send({message: 'Forbidden access'});
-//       }
-//       req.decoded = decoded;
-//       next();
-//   })
-// }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
+      if(err){
+          return res.status(403).send({message: 'Forbidden access'});
+      }
+      req.decoded = decoded;
+      next();
+  })
+}
 async function run(){
     
         try {
@@ -55,11 +55,11 @@ run()
 const Service = client.db("espousedb").collection("services");
 const Review = client.db("espousedb").collection("reviews");
 
-// app.post('/jwt', (req, res) =>{
-//   const user = req.body;
-//   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d'})
-//   res.send({token})
-// }) 
+app.post('/jwt', (req, res) =>{
+  const user = req.body;
+  const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d'})
+  res.send({token})
+}) 
 
 app.post("/add-service", async (req, res) => {
   try {
@@ -90,8 +90,8 @@ app.post("/add-service", async (req, res) => {
 app.get("/home-service", async (req, res) => {
   try {
     const query={}
-    const sort = { length: 1 };
-    const cursor = Service.find(query).sort(sort);
+    const sort = { length: -1 };
+    const cursor = Service.find(query).sort({$natural:-1});
     const Services = await cursor.limit(3).toArray();
 // console.log(Services[1])
     res.send({
@@ -259,35 +259,39 @@ app.get("/reviews", async (req, res) => {
 
 
 
-  app.patch('/myReviews/:id',async(req,res)=>{
-
-    const  id=req.params.id
-    const status=req.body.status
-    const query={_id:ObjectId(id)}
-    
-    
-    
-   
-    const reviews=Review.updateOne(query)
-    res.send(reviews)
-    })
-    
+  app.get("/myReviews/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+      const review = await Review.findOne({ _id: ObjectId(id) });
+  
+      res.send({
+        success: true,
+        data: review,
+      });
+    } catch (error) {
+      res.send({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
     
     app.delete("/myReviews/:id", async (req, res) => {
       const { id } = req.params;
-    
+      console.log(id)
       try {
         const review = await Review.findOne({ _id: ObjectId(id) });
     
         if (!review?._id) {
           res.send({
             success: false,
-            error: "Product doesn't exist",
+            error: "Review doesn't exist",
           });
           return;
         }
     
-        const result = await Product.deleteOne({ _id: ObjectId(id) });
+        const result = await Review.deleteOne({ _id: ObjectId(id) });
     
         if (result.deletedCount) {
           res.send({
@@ -306,14 +310,14 @@ app.get("/reviews", async (req, res) => {
 
     app.patch("/myReviews/:id", async (req, res) => {
       const { id } = req.params;
-    
+  
       try {
         const result = await Review.updateOne({ _id: ObjectId(id) }, { $set: req.body });
     
         if (result.matchedCount) {
           res.send({
             success: true,
-            message: `successfully updated ${req.body.name}`,
+            message: `successfully updated `,
           });
         } else {
           res.send({
