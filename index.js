@@ -1,38 +1,43 @@
+
+
 const express = require('express')
+const cors = require('cors')
+var jwt = require('jsonwebtoken');
+require('dotenv').config()
+const app = express()
+
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const app = express()
 const port = process.env.PORT || 5000
-require('dotenv').config()
-var cors = require('cors')
+
 
 app.use(cors())
 app.use(express.json())
 
 
-function verifyJWT(req, res, next){
-  const authHeader = req.headers.authorization;
 
-  if(!authHeader){
-      return res.status(401).send({message: 'unauthorized access'});
-  }
-  const token = authHeader.split(' ')[1];
-
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
-      if(err){
-          return res.status(403).send({message: 'Forbidden access'});
-      }
-      req.decoded = decoded;
-      next();
-  })
-}
 
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.qa3gncm.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+// function verifyJWT(req, res, next){
+//   const authHeader = req.headers.authorization;
 
+//   if(!authHeader){
+//       return res.status(401).send({message: 'unauthorized access'});
+//   }
+//   const token = authHeader.split(' ')[1];
+
+//   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function(err, decoded){
+//       if(err){
+//           return res.status(403).send({message: 'Forbidden access'});
+//       }
+//       req.decoded = decoded;
+//       next();
+//   })
+// }
 async function run(){
     
         try {
@@ -50,7 +55,11 @@ run()
 const Service = client.db("espousedb").collection("services");
 const Review = client.db("espousedb").collection("reviews");
 
-
+// app.post('/jwt', (req, res) =>{
+//   const user = req.body;
+//   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d'})
+//   res.send({token})
+// }) 
 
 app.post("/add-service", async (req, res) => {
   try {
@@ -175,7 +184,7 @@ app.get("/reviews", async (req, res) => {
    
     const cursor =  Review.find(query);
     const  Reviews = await cursor.toArray();
-console.log(Review)
+
     res.send({
       success: true,
       message: "Successfully got the data",
@@ -216,11 +225,65 @@ console.log(Review)
   
  
 
-  
+  app.get("/myReviews", async (req, res) => {
+    try {
+      let  query={}
 
 
 
+    //  const{email}=req.params
+    //  console.log(req.params)
+      if(req.query.email){
+          query={
+              email: req.query.email
+          }
+      }
+     
+     
+      const cursor =  Review.find(query);
+      const  Reviews = await cursor.toArray();
+ 
+      res.send({
+        success: true,
+        message: "Successfully got the data",
+        data:  Reviews,
+      });
+    } catch (error) {
+      console.log(error.name, error.message);
+      res.send({
+        success: false,
+        error: error.message,
+      });
+    }
+  });
 
+
+
+  app.patch('/reviews/:id',async(req,res)=>{
+
+    const  id=req.params.id
+    const status=req.body.status
+    const query={_id:ObjectId(id)}
+    
+    
+    
+    const updateDoc = {
+      $set: {
+        status:status
+      }
+    };
+    const result=await orderCollection.updateOne(query,updateDoc)
+    res.send(result)
+    })
+    
+    
+    app.delete('/reviews/:id',async(req,res)=>{
+      const id=req.params.id
+      const query={_id:ObjectId(id)}
+      const result=await orderCollection.deleteOne(query)
+      res.send(result)
+    
+    })
   
   
   
@@ -232,3 +295,12 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
 })
+
+
+
+
+
+
+
+
+
