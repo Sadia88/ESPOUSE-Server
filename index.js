@@ -225,7 +225,7 @@ app.get("/reviews", async (req, res) => {
   
  
 
-  app.get("/myReviews", async (req, res) => {
+  app.get("/myReviews", verifyJWT,async (req, res) => {
     try {
       let  query={}
 
@@ -259,7 +259,7 @@ app.get("/reviews", async (req, res) => {
 
 
 
-  app.get("/myReviews/:id", async (req, res) => {
+  app.get("/myReviews/:id",verifyJWT, async (req, res) => {
     try {
       const { id } = req.params;
   
@@ -277,7 +277,7 @@ app.get("/reviews", async (req, res) => {
     }
   });
     
-    app.delete("/myReviews/:id", async (req, res) => {
+    app.delete("/myReviews/:id",verifyJWT, async (req, res) => {
       const { id } = req.params;
       console.log(id)
       try {
@@ -308,7 +308,7 @@ app.get("/reviews", async (req, res) => {
       }
     });
 
-    app.patch("/myReviews/:id", async (req, res) => {
+    app.patch("/myReviews/:id",verifyJWT, async (req, res) => {
       const { id } = req.params;
   
       try {
